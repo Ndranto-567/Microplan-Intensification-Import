@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Acteurs Communautaires – Riposte Rougeole</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg:#0f1117; --surface:#181c27; --surface2:#1e2333; --border:#2a3045;
+    --accent:#3b82f6; --accent2:#10b981; --danger:#ef4444; --warn:#f59e0b;
+    --purple:#8b5cf6; --orange:#f97316; --text:#e2e8f0; --muted:#64748b; --label:#94a3b8;
+  }
+
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Outfit',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding:0 0 80px; }
+
+  header { background:linear-gradient(135deg,#2a1a0f 0%,#0f1117 100%); border-bottom:1px solid var(--border); padding:20px 32px; display:flex; align-items:center; gap:16px; }
+  .header-icon { width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;background:var(--orange); }
+  header h1 { font-size:1.3rem;font-weight:600;color:#fff; }
+  header p  { font-size:0.82rem;color:#94a3b8;margin-top:2px; }
+
+  .container { max-width:1100px;margin:0 auto;padding:28px 20px; }
+
+  .card { background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;margin-bottom:20px; }
+  .card-title { font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:18px;display:flex;align-items:center;gap:8px; }
+  .card-title::before { content:'';display:inline-block;width:3px;height:14px;border-radius:2px; }
+  .ct-orange { color:var(--orange); }
+  .ct-orange::before { background:var(--orange); }
+  .ct-green { color:var(--accent2); }
+  .ct-green::before { background:var(--accent2); }
+
+  .form-row { display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px; }
+  @media(max-width:540px){ .form-row{ grid-template-columns:1fr; } }
+  .form-group { display:flex;flex-direction:column;gap:6px; }
+  label.flabel { font-size:0.8rem;font-weight:500;color:var(--label); }
+  label.flabel span.req { color:var(--danger);margin-left:2px; }
+  select, input[type="number"] {
+    background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+    color:var(--text);font-family:inherit;font-size:0.92rem;padding:10px 14px;
+    transition:border-color 0.2s,box-shadow 0.2s;width:100%;
+  }
+  select:focus,input[type="number"]:focus { outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(249,115,22,0.15); }
+  select option { background:#1e2333; }
+  select:disabled { opacity:0.4;cursor:not-allowed; }
+
+  .field-error { font-size:0.75rem;color:var(--danger);margin-top:3px;display:none; }
+  .has-error select,.has-error input,.has-error textarea { border-color:var(--danger)!important; }
+  .has-error .field-error { display:block; }
+
+  /* STATUS BAR */
+  .status-bar { background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:0.8rem;color:var(--muted);margin-bottom:20px;display:flex;align-items:center;gap:8px; }
+  .dot { width:8px;height:8px;border-radius:50%;background:var(--muted); }
+  .dot.connected { background:var(--accent2);box-shadow:0 0 6px var(--accent2); }
+
+  /* TOOLBAR */
+  .toolbar { display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px; }
+  .toolbar-left { display:flex;gap:10px;flex-wrap:wrap;flex:1; }
+  .toolbar-right { display:flex;gap:10px;flex-wrap:wrap; }
+
+  /* IMPORT ZONE */
+  .import-zone {
+    border:2px dashed rgba(249,115,22,0.35);border-radius:12px;
+    padding:20px;text-align:center;cursor:pointer;transition:all 0.2s;
+    background:rgba(249,115,22,0.04);margin-bottom:16px;
+  }
+  .import-zone:hover, .import-zone.drag-over { border-color:var(--orange);background:rgba(249,115,22,0.1); }
+  .import-zone .iz-icon { font-size:2rem;margin-bottom:8px; }
+  .import-zone p { font-size:0.85rem;color:var(--label); }
+  .import-zone span { color:var(--orange);font-weight:600;cursor:pointer; }
+  #file-input { display:none; }
+
+  /* TABLE */
+  .ac-table-wrap { overflow-x:auto;border-radius:10px;border:1px solid var(--border); }
+  .ac-table {
+    width:100%;border-collapse:collapse;font-size:0.82rem;
+    min-width:900px;
+  }
+  .ac-table th {
+    background:#1a2744;color:var(--label);font-weight:600;
+    text-align:left;padding:10px 10px;font-size:0.73rem;
+    text-transform:uppercase;letter-spacing:0.05em;white-space:nowrap;
+    position:sticky;top:0;z-index:2;
+  }
+  .ac-table th.col-num { width:42px;text-align:center;color:var(--muted); }
+  .ac-table th.col-act { width:52px;text-align:center; }
+  .ac-table td { padding:4px 5px;border-bottom:1px solid var(--border);vertical-align:middle; }
+  .ac-table tr:last-child td { border-bottom:none; }
+  .ac-table tr:hover td { background:rgba(249,115,22,0.04); }
+  .ac-table td.col-num { text-align:center;color:var(--muted);font-size:0.75rem;font-family:'JetBrains Mono',monospace; }
+  .ac-table td.col-act { text-align:center; }
+
+  .ac-table input[type="text"], .ac-table select.cell-sel {
+    background:transparent;border:1px solid transparent;
+    border-radius:5px;color:var(--text);font-family:inherit;
+    font-size:0.82rem;padding:5px 7px;width:100%;
+    transition:all 0.15s;
+  }
+  .ac-table input[type="text"]:hover,
+  .ac-table select.cell-sel:hover { border-color:var(--border);background:var(--surface2); }
+  .ac-table input[type="text"]:focus,
+  .ac-table select.cell-sel:focus {
+    outline:none;border-color:var(--orange);
+    background:var(--surface2);
+    box-shadow:0 0 0 2px rgba(249,115,22,0.15);
+  }
+  .ac-table input.warn:focus { border-color:var(--warn);box-shadow:0 0 0 2px rgba(245,158,11,0.15); }
+
+  .btn-del-row {
+    background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);
+    color:var(--danger);border-radius:5px;padding:3px 8px;
+    cursor:pointer;font-size:0.78rem;transition:all 0.2s;white-space:nowrap;
+  }
+  .btn-del-row:hover { background:rgba(239,68,68,0.25); }
+
+  .ac-empty {
+    text-align:center;color:var(--muted);font-size:0.85rem;
+    padding:32px;font-style:italic;
+  }
+  .ac-empty .ac-empty-icon { font-size:2rem;margin-bottom:8px;opacity:0.5; }
+
+  /* BUTTONS */
+  .btn { padding:9px 18px;border-radius:8px;border:none;cursor:pointer;font-family:inherit;font-size:0.88rem;font-weight:600;display:inline-flex;align-items:center;gap:7px;transition:all 0.2s; }
+  .btn-orange  { background:var(--orange);color:#fff; }
+  .btn-orange:hover  { background:#ea6a0a;transform:translateY(-1px); }
+  .btn-green   { background:var(--accent2);color:#fff; }
+  .btn-green:hover   { background:#059669;transform:translateY(-1px); }
+  .btn-secondary { background:var(--surface2);color:var(--text);border:1px solid var(--border); }
+  .btn-secondary:hover { border-color:var(--orange);color:var(--orange); }
+  .btn-add-row {
+    display:inline-flex;align-items:center;gap:7px;
+    background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);
+    color:var(--orange);border-radius:8px;padding:8px 16px;
+    cursor:pointer;font-family:inherit;font-size:0.85rem;font-weight:600;
+    transition:all 0.2s;
+  }
+  .btn-add-row:hover { background:rgba(249,115,22,0.2);transform:translateY(-1px); }
+  .btn-load { background:rgba(59,130,246,0.15);color:var(--accent);border:1px solid rgba(59,130,246,0.3); }
+  .btn-load:hover { background:rgba(59,130,246,0.25); }
+  .btn-back { background:rgba(100,116,139,0.15);color:var(--muted);border:1px solid rgba(100,116,139,0.2); }
+  .btn-back:hover { background:rgba(100,116,139,0.25); }
+  .btn-danger { background:rgba(239,68,68,0.1);color:var(--danger);border:1px solid rgba(239,68,68,0.25); }
+  .btn-danger:hover { background:rgba(239,68,68,0.2); }
+
+  /* STATS BAR */
+  .stats-bar { display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px; }
+  .stat-chip {
+    background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+    padding:8px 14px;font-size:0.8rem;display:flex;align-items:center;gap:6px;
+  }
+  .stat-chip .sv { font-weight:700;color:var(--orange);font-family:'JetBrains Mono',monospace; }
+
+  /* PROGRESS */
+  .upload-progress {
+    display:none;background:var(--surface2);border:1px solid var(--border);
+    border-radius:10px;padding:16px;margin-bottom:16px;
+  }
+  .upload-progress.visible { display:block; }
+  .progress-bar-wrap { background:var(--border);border-radius:4px;height:6px;margin-top:8px;overflow:hidden; }
+  .progress-bar { height:100%;background:var(--orange);border-radius:4px;transition:width 0.3s;width:0%; }
+
+  /* TOAST */
+  #toast { position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#1e2333;border:1px solid var(--border);border-radius:10px;padding:12px 20px;font-size:0.85rem;color:var(--text);display:flex;align-items:center;gap:10px;box-shadow:0 8px 32px rgba(0,0,0,0.4);transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);z-index:999;max-width:90vw; }
+  #toast.show { transform:translateX(-50%) translateY(0); }
+  #toast.success { border-color:var(--accent2); }
+  #toast.error   { border-color:var(--danger); }
+  #toast.warn    { border-color:var(--warn); }
+
+  /* PAGINATION */
+  .pagination { display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
+  .page-btn { padding:5px 11px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;font-size:0.8rem;transition:all 0.2s; }
+  .page-btn:hover { border-color:var(--orange);color:var(--orange); }
+  .page-btn.active { background:var(--orange);border-color:var(--orange);color:#fff; }
+  .page-btn:disabled { opacity:0.4;cursor:not-allowed; }
+
+  /* SEARCH */
+  .search-wrap { position:relative;flex:1;min-width:200px; }
+  .search-wrap input {
+    background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+    color:var(--text);font-family:inherit;font-size:0.88rem;padding:9px 14px 9px 36px;
+    width:100%;transition:border-color 0.2s;
+  }
+  .search-wrap input:focus { outline:none;border-color:var(--orange);box-shadow:0 0 0 3px rgba(249,115,22,0.15); }
+  .search-wrap .search-icon { position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:0.9rem;pointer-events:none; }
+
+  /* REGION/DISTRICT filter badge */
+  .filter-badge {
+    background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);
+    border-radius:6px;padding:4px 10px;font-size:0.78rem;color:var(--orange);
+    display:none;align-items:center;gap:6px;
+  }
+  .filter-badge.visible { display:inline-flex; }
+
+  /* Paste hint */
+  .paste-hint {
+    font-size:0.75rem;color:var(--muted);margin-top:6px;
+    display:flex;align-items:center;gap:5px;
+  }
+  kbd { background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:0.72rem;font-family:'JetBrains Mono',monospace; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-icon">👥</div>
+  <div>
+    <h1>Acteurs Communautaires – Riposte Rougeole</h1>
+    <p>Saisie et importation des acteurs communautaires par district</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="status-bar">
+    <div class="dot connected"></div>
+    <span>Google Sheet connecté – Feuille « Acteurs Communautaires »</span>
+    <a href="index.html" class="btn btn-back" style="margin-left:auto;padding:6px 14px;font-size:0.78rem;text-decoration:none;">← Retour à l'accueil</a>
+  </div>
+
+  <!-- Localisation -->
+  <div class="card">
+    <div class="card-title ct-orange">📍 Localisation</div>
+    <div class="form-row">
+      <div class="form-group" id="grp-region">
+        <label class="flabel">Région <span class="req">*</span></label>
+        <select id="sel-region" onchange="onRegionChange()">
+          <option value="">— Sélectionner une région —</option>
+        </select>
+        <span class="field-error">Veuillez sélectionner une région.</span>
+      </div>
+      <div class="form-group" id="grp-district">
+        <label class="flabel">District <span class="req">*</span></label>
+        <select id="sel-district" disabled onchange="onDistrictChange()">
+          <option value="">— Sélectionner un district —</option>
+        </select>
+        <span class="field-error">Veuillez sélectionner un district.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import / Tableau -->
+  <div class="card">
+    <div class="card-title ct-orange">
+      📋 Tableau des Acteurs Communautaires
+      <span id="ac-count" style="font-size:0.75rem;color:var(--muted);font-weight:400;margin-left:4px;">(0 acteur)</span>
+    </div>
+
+    <!-- Import zone -->
+    <div class="import-zone" id="import-zone"
+         onclick="document.getElementById('file-input').click()"
+         ondragover="onDragOver(event)"
+         ondragleave="onDragLeave(event)"
+         ondrop="onDrop(event)">
+      <div class="iz-icon">📂</div>
+      <p>Glissez-déposez un fichier <strong>Excel (.xlsx, .xls)</strong> ou <span>cliquez pour importer</span></p>
+      <p style="margin-top:4px;font-size:0.75rem;">Les colonnes seront automatiquement mappées sur le tableau</p>
+    </div>
+    <input type="file" id="file-input" accept=".xlsx,.xls,.csv" onchange="onFileSelect(event)">
+
+    <!-- Progress -->
+    <div class="upload-progress" id="upload-progress">
+      <div style="font-size:0.82rem;color:var(--label);" id="upload-msg">Import en cours…</div>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-bar" id="stats-bar" style="display:none;">
+      <div class="stat-chip">Total : <span class="sv" id="stat-total">0</span></div>
+      <div class="stat-chip">Avec CIN : <span class="sv" id="stat-cin">0</span></div>
+      <div class="stat-chip">Avec M'vola : <span class="sv" id="stat-mvola">0</span></div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search-input" placeholder="Rechercher nom, poste, CSB…" oninput="onSearch()">
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn btn-secondary" style="font-size:0.82rem;padding:8px 14px;" onclick="clearAll()">🗑 Vider</button>
+        <button class="btn-add-row" onclick="addRow()">＋ Ajouter une ligne</button>
+      </div>
+    </div>
+    <div class="paste-hint">💡 Astuce : copiez des lignes depuis Excel puis appuyez sur <kbd>Ctrl+V</kbd> dans le tableau pour les coller directement.</div>
+
+    <!-- Table -->
+    <div class="ac-table-wrap" style="margin-top:12px;" id="table-wrap">
+      <table class="ac-table" id="ac-table">
+        <thead>
+          <tr>
+            <th class="col-num">#</th>
+            <th style="min-width:130px;">CSB <span style="color:var(--danger)">*</span></th>
+            <th style="min-width:130px;">Fokontany <span style="color:var(--danger)">*</span></th>
+            <th style="min-width:160px;">Nom et Prénom <span style="color:var(--danger)">*</span></th>
+            <th style="min-width:140px;">Poste / Fonction</th>
+            <th style="min-width:140px;">CIN</th>
+            <th style="min-width:140px;">Num M'vola</th>
+            <th class="col-act"></th>
+          </tr>
+        </thead>
+        <tbody id="ac-tbody">
+          <tr id="ac-empty-row">
+            <td colspan="8" class="ac-empty">
+              <div class="ac-empty-icon">👥</div>
+              <div>Aucun acteur. Importez un fichier Excel ou ajoutez des lignes manuellement.</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;flex-wrap:wrap;gap:10px;">
+      <div class="pagination" id="pagination"></div>
+      <div style="font-size:0.78rem;color:var(--muted);" id="page-info"></div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="card">
+    <div class="card-title ct-orange">Actions</div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <button class="btn btn-load" onclick="loadData()">📂 Charger depuis Google Sheet</button>
+      <button class="btn btn-orange" onclick="submitData()">💾 Enregistrer dans Google Sheet</button>
+      <button class="btn btn-secondary" onclick="exportCSV()">⬇ Exporter CSV</button>
+      <button class="btn btn-secondary" onclick="resetAll()">🔄 Réinitialiser</button>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<div id="toast"><span id="toast-msg">Message</span></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="acteurs-communautaires.js"></script>
+</body>
+</html>
